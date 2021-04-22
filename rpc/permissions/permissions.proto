@@ -1,0 +1,44 @@
+syntax="proto3";
+
+package velmie.wallet.permissions;
+option go_package = "permissions";
+
+message PermissionReq {
+  string user_id = 1;
+  string action_key = 2;
+}
+
+message PermissionsReq {
+  string user_id = 1;
+  repeated string action_keys = 2;
+}
+
+message PermissionResp {
+  string user_id = 1;
+  string action_key = 2;
+  bool is_allowed = 3;
+}
+
+message PermissionsResp {
+  repeated PermissionResp permissions = 1;
+}
+
+message GroupIdsReq {
+  repeated int64 ids = 1;
+}
+
+message Group {
+  int64 id = 1;
+  string name  = 2;
+  string description = 3;
+}
+
+message GroupsResponse {
+  repeated Group groups = 1;
+}
+
+service PermissionChecker {
+  rpc Check(PermissionReq) returns (PermissionResp);
+  rpc CheckAll(PermissionsReq) returns (PermissionsResp);
+  rpc GetGroupsByIds(GroupIdsReq) returns (GroupsResponse);
+}

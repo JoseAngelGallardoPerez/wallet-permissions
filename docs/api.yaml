@@ -1,0 +1,549 @@
+openapi: 3.0.2
+info:
+  version: "0.1.0"
+  title: 'Wallet Permissions service'
+  description: Permissions API for developers.
+security:
+  - bearerAuth: []
+paths:
+  '/permissions/private/v1/admin/group':
+    get:
+      tags:
+        - Group
+      summary: Shows a list of admin groups.
+      description: |
+        Available for users with "view_settings" permission.
+        \
+        Returns all groups if "userId" is not passed. Otherwise returns groups for user by passed id.
+      operationId: getGroups
+      parameters:
+        - name: userId
+          in: query
+          description: Filter by user id (get group for specific user).
+          required: false
+          schema:
+            type: string
+        - name: scope
+          in: query
+          description: Filter by scope.
+          required: false
+          schema:
+            type: string
+            enum: ["admin", "client"]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      object:
+                        type: string
+                        enum:
+                          - list
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Group'
+        '403':
+          description: forbidden
+    post:
+      tags:
+        - Group
+      summary: Creates a new admin group.
+      description: |
+        Available for admins with "create_settings" permission.
+      operationId: createGroup
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGroup'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Group'
+        '400':
+          description: group name is not specified or duplicate record found
+        '403':
+          description: forbidden
+
+  '/permissions/private/v1/admin/group/{id}':
+    post:
+      tags:
+        - Group
+      summary: Updates an admin group.
+      description: Available for admins with "modify_settings" permission.
+      operationId: updateGroup
+      parameters:
+        - name: id
+          in: path
+          description: An user group id.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateGroup'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Group'
+        '400':
+          description: duplicate record found
+        '403':
+          description: forbidden
+    get:
+      tags:
+        - Group
+      summary: Shows a group by id.
+      operationId: getGroupById
+      parameters:
+        - name: id
+          in: path
+          description: An user group id.
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Group'
+        '403':
+          description: forbidden
+
+    delete:
+      tags:
+        - Group
+      summary: Deletes a group.
+      operationId: deleteGroupById
+      parameters:
+        - name: id
+          in: path
+          description: An user group id.
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: successfully deleted
+        '403':
+          description: forbidden
+        '409':
+          description: group cannot be deleted as long as administrators are present in the group
+
+  '/permissions/private/v1/admin/category':
+    get:
+      tags:
+        - Category
+      summary: Shows a three of actions.
+      description: Available for admins with "view_settings" permission.
+      operationId: getCategories
+      parameters:
+        - name: groupId
+          in: query
+          description: Applies a filter by group id (shows actions for specific group).
+          required: false
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      object:
+                        type: string
+                        enum:
+                          - list
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Category'
+        '403':
+          description: forbidden
+
+  '/permissions/private/v1/admin/permission':
+    get:
+      tags:
+        - Permission
+      summary: Shows a list of all permissions for spicified user.
+      description: Available for admins.
+      operationId: getPermissions
+      parameters:
+        - name: userId
+          in: query
+          description: Unique user id
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      object:
+                        type: string
+                        enum:
+                          - list
+                      has_more:
+                        type: boolean
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Permission'
+        '400':
+          description: User id is not specified
+        '403':
+          description: forbidden
+
+  '/permissions/private/v1/admin/permission/{key}':
+    get:
+      tags:
+        - Client
+      summary: Shows specific permission for a user.
+      description: Available for users with "view_settings" permission.
+      operationId: getPermission
+      parameters:
+        - name: key
+          in: path
+          description: A permission key.
+          required: true
+          schema:
+            type: string
+        - name: userId
+          in: query
+          description: An user id.
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Permission'
+        '400':
+          description: User id is not specified
+        '403':
+          description: forbidden
+
+  '/permissions/private/v1/client/group':
+    get:
+      tags:
+        - Client
+      summary: Allowed for buyers, suppliers and financier. Shows a list of client groups.
+      description: |
+        Available for users with role "buyer", "supplier" and "financier" and with "view_settings" permission.
+        \
+        Returns all groups if "userId" is not passed. Otherwise returns groups for user by passed id.
+      operationId: getClientGroups
+      parameters:
+        - name: userId
+          in: query
+          description: Filter by user id (get group for specific user).
+          required: false
+          schema:
+            type: string
+        - name: scope
+          in: query
+          description: Filter by scope.
+          required: false
+          schema:
+            type: string
+            enum: ["admin", "client"]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      object:
+                        type: string
+                        enum:
+                          - list
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Group'
+        '403':
+          description: forbidden
+
+  '/permissions/private/v1/client/permission':
+    get:
+      tags:
+        - Client
+      summary: Shows a list of all permissions for spicified user.
+      description: Available for users with "view_settings" permission.
+      operationId: getClientPermissions
+      parameters:
+        - name: userId
+          in: query
+          description: Unique user id
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      object:
+                        type: string
+                        enum:
+                          - list
+                      has_more:
+                        type: boolean
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Permission'
+        '400':
+          description: User id is not specified
+        '403':
+          description: forbidden
+
+  '/permissions/private/v1/client/permission/{key}':
+    get:
+      tags:
+        - Permission
+      summary: Shows specific permission for a user.
+      description: Available for users with "view_settings" permission.
+      operationId: getClientPermission
+      parameters:
+        - name: key
+          in: path
+          description: A permission key.
+          required: true
+          schema:
+            type: string
+        - name: userId
+          in: query
+          description: An user id.
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Permission'
+        '400':
+          description: User id is not specified
+        '403':
+          description: forbidden
+
+components:
+  schemas:
+    CreateGroup:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Group name (required)
+        description:
+          type: string
+          description: Optional group description
+        scope:
+          type: string
+          description: Group scope (required)
+          enum:
+            - client
+            - admin
+        actions:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              enabled:
+                type: boolean
+      required:
+        - name
+        - scope
+
+    UpdateGroup:
+      type: object
+      properties:
+        name:
+          type: string
+          description: New group name (optional)
+        description:
+          type: string
+          description: Add or edit group description (optional)
+        actions:
+          description: Enable/disable actions for the group
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              enabled:
+                type: boolean
+
+    Permission:
+      type: object
+      properties:
+        actionKey:
+          type: string
+          description: unique action key
+        isAllowed:
+          type: boolean
+          description: Defines if user is allowed to perform some action
+        userId:
+          type: string
+          description: unique user ID
+        object:
+          type: string
+          description: object class
+          enum:
+            - permission
+
+    Group:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+        createdAt:
+          type: integer
+          format: int64
+        updatedAt:
+          type: integer
+          format: int64
+        object:
+          type: string
+          description: object class
+          enum:
+            - group
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        sort:
+          type: integer
+          format: int64
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShortAction'
+
+    ShortAction:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        categoryId:
+          type: integer
+          format: int64
+        parentId:
+          type: integer
+          format: int64
+        key:
+          type: string
+          description: unique action key
+        enabled:
+          type: boolean
+        sort:
+          type: integer
+          format: int64
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShortAction'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
